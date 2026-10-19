@@ -237,7 +237,10 @@ the outside, and only one of them should freeze the conservative channel.
 
 `promote` waits for `build` to go green. `main` does not, by design: it is the
 channel that finds out. No channel should ever point a consumer at a pin whose
-closure failed to compile.
+closure failed to compile — and "closure" means both cached variants, so a
+break that only `default` hits holds the channels back as well. `default` runs
+as its own job after `messaging`, so it substitutes the shared closure rather
+than compiling it a second time in parallel.
 
 Cadence, measured over all 32 upstream releases from `0.2.0` to `0.21.1`
 (2026-03-12 to 2026-09-07):
@@ -375,6 +378,9 @@ from a rate.
 
 Once cached, `default` costs 11s and 169 MiB of extra download on a run with
 nothing to build — it substitutes 101 paths the `messaging` step did not need.
+Those figures are from when it was a second step in the same job. As its own
+job it also pays for a runner, the setup steps and the shared paths the
+`messaging` job already had, which is not yet measured.
 Run totals swing by minutes either way on the `free-disk-space` step, which is
 where a no-op run actually spends its time.
 

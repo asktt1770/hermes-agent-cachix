@@ -121,10 +121,10 @@ jobs:
   # a pin whose closure failed to compile. `build` being skipped skips this too,
   # which is the intended reading of "nothing changed".
   #
-  # "Failed to compile" means `messaging` here. The `default` step inside
-  # `build` carries `continue-on-error`, so a break confined to the groups only
-  # `default` pulls leaves this job green and the channels moving — see the
-  # comment on that step for why that is the wanted behaviour.
+  # "Failed to compile" covers every variant `build` caches, `default` as well
+  # as `messaging`. A break confined to the groups only `default` pulls holds
+  # the channels back too, because a consumer on `default` would otherwise be
+  # handed a pin that no cache serves.
   promote:
     needs: [update, build]
     if: needs.update.outputs.changed == 'true'
