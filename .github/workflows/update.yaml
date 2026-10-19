@@ -120,6 +120,11 @@ jobs:
   # After `build`, not alongside it. A channel should never point a consumer at
   # a pin whose closure failed to compile. `build` being skipped skips this too,
   # which is the intended reading of "nothing changed".
+  #
+  # "Failed to compile" covers every variant `build` caches, `default` as well
+  # as `messaging`. A break confined to the groups only `default` pulls holds
+  # the channels back too, because a consumer on `default` would otherwise be
+  # handed a pin that no cache serves.
   promote:
     needs: [update, build]
     if: needs.update.outputs.changed == 'true'

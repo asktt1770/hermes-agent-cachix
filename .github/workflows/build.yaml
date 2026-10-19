@@ -44,8 +44,12 @@ concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
+# Two jobs, and `promote` in update.yaml waits for both: a failed job inside a
+# called workflow fails the caller's job, so either one breaking stops the
+# channels. A channel then only ever points at a pin where every cached variant
+# compiled, which is the guarantee a consumer of either one is relying on.
 jobs:
-  build:
+  messaging:
     runs-on: ubuntu-latest
     steps:
       # Empty for every trigger except update.yaml's call, where checkout falls
@@ -77,13 +81,53 @@ jobs:
           name: nix-hermes-agent
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      # `messaging` — not `default` — is the variant the consumer asks for
-      # (Iris: `modules/hermes/default.nix`, `.packages.${system}.messaging`).
-      # They are different derivations, so caching `default` here would build
-      # 3 GiB that nothing ever pulls.
+      # `messaging` is the variant the consumer asks for (Iris:
+      # `modules/hermes/default.nix`, `.packages.${system}.messaging`), so it
+      # goes first: its narrower dependency set is the less likely to break.
       #
       # No `--max-jobs` cap: this runner has 16 GB against the 7.7 GB box that
       # needs the cap. If a run ever dies on memory, `--max-jobs 2` is the first
       # thing to try, and it is worth recording that it happened.
       - name: Build messaging (x86_64-linux)
         run: nix build -L '.#messaging'
+
+  # `default` (= `full`) is a second override of the same `minimal`, not a
+  # wrapper around `messaging`. The two closures share 5412 derivations;
+  # `default` adds 198 on top (98 wheels, their 98 unpacked forms, a venv and a
+  # wrapper) and `messaging` keeps 2 of its own, its venv and its wrapper.
+  #
+  # Built because `default` is what upstream's NixOS and Home Manager modules
+  # resolve to when `services.hermes-agent.package` is left alone. Uncached,
+  # that default means an hour of local compile on the host this repo exists
+  # for.
+  #
+  # After `messaging` rather than alongside it. On a bump the shared part —
+  # hermes itself included — is not yet in the cache, and two parallel runners
+  # would each compile it. Waiting means this job substitutes all of it and
+  # builds only its 198. Its own runner also keeps its wider dependency surface
+  # (`matrix` pulls `python-olm`, `voice` pulls `ctranslate2` and `onnxruntime`)
+  # from taking `messaging` down with it on disk or memory.
+  default:
+    needs: messaging
+    runs-on: ubuntu-latest
+    steps:
+      # The same setup as `messaging`; see the comments there.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: true
+          large-packages: false
+
+      - uses: cachix/install-nix-action@v31.11.1
+
+      - uses: cachix/cachix-action@v17
+        with:
+          name: nix-hermes-agent
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Build default (x86_64-linux)
+        run: nix build -L '.#default'
