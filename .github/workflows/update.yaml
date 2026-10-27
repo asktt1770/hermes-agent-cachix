@@ -92,10 +92,10 @@ jobs:
 
   # The release channels. A consumer picks one with a word in its flake URL:
   #
-  #   github:asktt1770/nix-hermes-agent          -> main, same commits as patch
-  #   github:asktt1770/nix-hermes-agent/patch    -> every release
-  #   github:asktt1770/nix-hermes-agent/minor    -> every X.Y.0
-  #   github:asktt1770/nix-hermes-agent/major    -> every X.0.0
+  #   github:asktt1770/hermes-agent-cachix          -> main, same commits as patch
+  #   github:asktt1770/hermes-agent-cachix/patch    -> every release
+  #   github:asktt1770/hermes-agent-cachix/minor    -> every X.Y.0
+  #   github:asktt1770/hermes-agent-cachix/major    -> every X.0.0
   #
   # Branches rather than tags or marker files because a branch is the only one
   # of the three a consumer picks once — `nix flake update` then follows it on
