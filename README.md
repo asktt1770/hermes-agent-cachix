@@ -1,4 +1,4 @@
-# nix-hermes-agent
+# hermes-agent-cachix
 
 A thin flake that re-exports [`NousResearch/hermes-agent`](https://github.com/NousResearch/hermes-agent)
 unchanged, and exists so that **CI builds it once and a binary cache hands the
@@ -40,20 +40,20 @@ upstream has to bump before they move:
 
 ```nix
 # Every release — one every ~6 days
-inputs.hermes-agent.url = "github:asktt1770/nix-hermes-agent/patch";
+inputs.hermes-agent.url = "github:asktt1770/hermes-agent-cachix/patch";
 
 # Every X.Y.0 — one every ~13 days lately, and lengthening
-inputs.hermes-agent.url = "github:asktt1770/nix-hermes-agent/minor";
+inputs.hermes-agent.url = "github:asktt1770/hermes-agent-cachix/minor";
 
 # Every X.0.0 — does not exist yet; see below
-inputs.hermes-agent.url = "github:asktt1770/nix-hermes-agent/major";
+inputs.hermes-agent.url = "github:asktt1770/hermes-agent-cachix/major";
 ```
 
 `main` is the default branch and carries the same commits as `patch`, so the
 URL with no branch at all is the same subscription written shorter:
 
 ```nix
-inputs.hermes-agent.url = "github:asktt1770/nix-hermes-agent";
+inputs.hermes-agent.url = "github:asktt1770/hermes-agent-cachix";
 ```
 
 **`major` does not exist yet.** Upstream has never left `0.x`, so there has
@@ -90,6 +90,9 @@ nix.settings = {
   ];
 };
 ```
+
+The cache is called `nix-hermes-agent`, not `hermes-agent-cachix`: it predates
+the repository's current name, and Cachix cache names cannot be changed.
 
 This part is not optional and cannot be inherited. This flake declares
 `nixConfig`, but Nix applies `nixConfig` only to the flake being evaluated as the

@@ -22,7 +22,7 @@
   };
 
   # Applies only when THIS flake is the top level, e.g.
-  #   nix build github:asktt1770/nix-hermes-agent#messaging
+  #   nix build github:asktt1770/hermes-agent-cachix#messaging
   #
   # `nixConfig` is NOT inherited by flakes that take this one as an input, so a
   # consuming NixOS host has to add the substituter to `nix.settings` itself.
